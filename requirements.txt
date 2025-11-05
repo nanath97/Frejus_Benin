@@ -1,0 +1,8 @@
+fastapi==0.110.0
+uvicorn==0.29.0
+aiogram==2.22.1
+aiohttp==3.8.5
+python-dotenv==1.0.0
+requests==2.31.0
+stripe==10.10.0
+gunicorn==21.2.0
