@@ -42,7 +42,7 @@ authorized_admin_ids = [ADMIN_ID]
 
 # Constantes pour le bouton VIP et la vidéo de bienvenue (défaut)
 VIP_URL = "https://buy.stripe.com/7sYfZgbl35R5bEF8TH7AI1b"
-WELCOME_VIDEO_FILE_ID = "BAACAgQAAxkBAAPEaQoZEf5NLiGXL79Qq-0xzsrUrAMAAtgaAAJek1FQ9z_tlMd-6Rc2BA"
+WELCOME_VIDEO_FILE_ID = "BAACAgQAAxkBAAMEaQyl8iONQWPB98HVrIbmKaB0M3IAAp4cAAJhO2lQb1QzUmVGH0A2BA"
 
 
 
@@ -61,7 +61,7 @@ paiements_recents = defaultdict(list)  # ex : {14: [datetime1, datetime2]}
 
 
 # 1.=== Variables globales ===
-DEFAULT_FLOU_IMAGE_FILE_ID = "AgACAgQAAxkBAAPKaQoZsyUtqJmKZzpVTjLv9VFMLzUAArMLaxtek1FQGL2-h9ki2a0BAAMCAAN4AAM2BA" # Remplace par le vrai file_id Telegram
+DEFAULT_FLOU_IMAGE_FILE_ID = "AgACAgQAAxkBAAMDaQyl8p3QW83lWG18yEYa4bDHt7AAAq4LaxthO2lQg6upJ84SuoIBAAMCAAN4AAM2BA" # Remplace par le vrai file_id Telegram
 
 
 # Fonction de détection de lien non autorisé
@@ -661,11 +661,11 @@ async def handle_start(message: types.Message):
         )
 
         # 2 photos VIP
-        await bot.send_photo(chat_id=user_id, photo="AgACAgQAAxkBAAPIaQoZhWQxhphnbPASL7B0azRsfL4AArILaxtek1FQYk5K1KDLoegBAAMCAAN5AAM2BA")
-        await bot.send_photo(chat_id=user_id, photo="AgACAgQAAxkBAAPOaQoZ7sGjzKHvOp2HTWkdF85sPlgAArQLaxtek1FQMYkzf8-CaRABAAMCAAN5AAM2BA")
+        await bot.send_photo(chat_id=user_id, photo="AgACAgQAAxkBAAMHaQyl8jHBcxmkcGXXVRngMSLdT8MAArALaxthO2lQ2GdoZ3MYtrUBAAMCAAN5AAM2BA")
+        await bot.send_photo(chat_id=user_id, photo="AgACAgQAAxkBAAMVaQyvWhj7Ul1g06a4FXkt3EppiX4AAusLaxthO2lQaAng_Kpph3YBAAMCAAN5AAM2BA")
 
         # 1 vidéo VIP
-        await bot.send_video(chat_id=user_id, video="BAACAgQAAxkBAAPGaQoZZD2d0lbeVGfu_rF9OI4g2M8AAtkaAAJek1FQLrBTrfP_5wg2BA")
+        await bot.send_video(chat_id=user_id, video="BAACAgQAAxkBAAMTaQyulOE1uMSahEHC8UCYj--1naMAAn4dAAJhO2lQ7jfT8glPD8s2BA")
 
         # Logs
         await bot.send_message(ADMIN_ID, f"🌟 Nouveau VIP : {message.from_user.username or message.from_user.first_name}.")
