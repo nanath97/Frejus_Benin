@@ -17,13 +17,31 @@ from middlewares.payment_filter import PaymentFilterMiddleware, reset_free_quota
 dp.middleware.setup(PaymentFilterMiddleware(authorized_users))
 
 
+# Handler pour récupérer le file_id d'une photo
+@dp.message_handler(content_types=['photo'])
+async def get_photo_file_id(message: types.Message):
+    file_id = message.photo[-1].file_id  # on prend la meilleure résolution
+    await message.reply(f"📸 File ID de cette photo :\n{file_id}")
+
+# Handler pour récupérer le file_id d'une vidéo
+@dp.message_handler(content_types=['video'])
+async def get_video_file_id(message: types.Message):
+    file_id = message.video.file_id
+    await message.reply(f"🎬 File ID de cette vidéo :\n{file_id}")
+
+
+
+
+
+
+
 # Dictionnaire temporaire pour stocker les derniers messages de chaque client
 last_messages = {}
 ADMIN_ID = 6560885777
 authorized_admin_ids = [ADMIN_ID]
 
 # Constantes pour le bouton VIP et la vidéo de bienvenue (défaut)
-VIP_URL = "https://buy.stripe.com/aFa5kCgFn93h245fi57AI0s"
+VIP_URL = "https://buy.stripe.com/7sYfZgbl35R5bEF8TH7AI1b"
 WELCOME_VIDEO_FILE_ID = "BAACAgQAAxkBAAPEaQoZEf5NLiGXL79Qq-0xzsrUrAMAAtgaAAJek1FQ9z_tlMd-6Rc2BA"
 
 
@@ -330,7 +348,7 @@ WHITELIST_LINKS = [
     "https://novapulseonline.wixsite.com/",
     "https://buy.stripe.com/",
     "https://t.me/mini_jessie_bot?start=cdan"
-    "https://t.me/Maevaofbot?start=cdan" # 22 Rajouter  le lien propre de l'admin
+    "https://t.me/lilabeevip_bot?start=cdan" # 22 Rajouter  le lien propre de l'admin
 ]
 
 def lien_non_autorise(text):
@@ -458,18 +476,18 @@ async def demande_contenu_jour(message: types.Message):
     if user_id not in authorized_users:
         bouton_vip = InlineKeyboardMarkup().add(
             InlineKeyboardButton(
-                text="🔥 Rejoins le VIP pour 9 €",
-                url="https://buy.stripe.com/aFa5kCgFn93h245fi57AI0s"
+                text="🔥 Rejoins le VIP pour 1 €",
+                url="https://buy.stripe.com/7sYfZgbl35R5bEF8TH7AI1b"
             )
         )
         await message.reply(
             "Tu veux tenter ta chance mon coeur ? 🍀\n\n"
 "🚨 Mais pour jouer et essayer d'obtenir le contenu d'aujourd'hui, tu dois être un VIP.\n\n"
-" Mais c'est ton jour de chance : aujourd'hui, il ne coûte que 9 € 🎁 ! Avec 2 photos nues et 1 vidéo très hard de ma chatte. 🔞\n\n"
+" Mais c'est ton jour de chance : aujourd'hui, il ne coûte que 1 € 🎁 ! Avec 2 photos nues et 1 vidéo très hard de ma chatte. 🔞\n\n"
 "C'est simple : clique sur le bouton ci-dessous 👇 et tente ta chance dès maintenant\n\n"
 "<i>🔐 Paiement sécurisé via Stripe</i>\n"
 
-            "https://buy.stripe.com/aFa5kCgFn93h245fi57AI0s\n",
+            "https://buy.stripe.com/7sYfZgbl35R5bEF8TH7AI1b\n",
             reply_markup=bouton_vip,
             parse_mode="HTML"
         )
@@ -655,7 +673,7 @@ async def handle_start(message: types.Message):
             pseudo=message.from_user.username or message.from_user.first_name,
             user_id=user_id,
             type_acces="VIP",
-            montant=9.0,
+            montant=1.0,
             contenu="Pack 2 photos + 1 vidéo + accès VIP"
         )
         await bot.send_message(ADMIN_ID, "✅ VIP Access enregistré dans ton dashboard.")
@@ -689,12 +707,12 @@ async def handle_start(message: types.Message):
 
     # 3) Image floutée + offre €9
     vip_offer_kb = InlineKeyboardMarkup().add(
-        InlineKeyboardButton("💎 Accès immédiat pour 9 €", url=VIP_URL)
+        InlineKeyboardButton("💎 Accès immédiat pour 1 €", url=VIP_URL)
     )
     await bot.send_photo(
         chat_id=user_id,
         photo=DEFAULT_FLOU_IMAGE_FILE_ID,
-        caption="🔥 Offre spéciale valable uniquement aujourd'hui !\n - 2 nudes 🔞\n - 1 vidéo hard où je mouille 💦\n- Accès VIP à vie ⚡\n Pour seulement 9 € \n👉 Cliquez ci-dessous pour y accéder immédiatement !",
+        caption="🔥 Offre spéciale valable uniquement aujourd'hui !\n - 2 nudes 🔞\n - 1 vidéo hard où je mouille 💦\n- Accès VIP à vie ⚡\n Pour seulement 1 € \n👉 Cliquez ci-dessous pour y accéder immédiatement !",
         reply_markup=vip_offer_kb
     )
 
@@ -777,20 +795,20 @@ async def envoyer_contenu_payant(message: types.Message):
     
 # 22 Mettre les liens propres à l'admin
     liens_paiement = {
-        "1": "https://buy.stripe.com/cNiaEWbl3a7l9wx3zn7AI0r",
-        "9": "https://buy.stripe.com/aFa5kCgFn93h245fi57AI0s",
-        "14": "https://buy.stripe.com/bJecN4agZ6V9gYZc5T7AI0t",
-        "19": "https://buy.stripe.com/4gM14mexfgvJbEFgm97AI0u",
-        "24": "https://buy.stripe.com/28E28q74Na7l5ghgm97AI0v",
-        "29": "https://buy.stripe.com/00w5kC2Ox4N1245gm97AI0w",
-        "34": "https://buy.stripe.com/5kQ5kC74N4N1cIJgm97AI0x",
-        "39": "https://buy.stripe.com/fZueVcgFn93hbEF5Hv7AI0y",
-        "49": "https://buy.stripe.com/4gM8wO74N3IXeQR0nb7AI0z",
-        "59": "https://buy.stripe.com/5kQ4gy74NgvJ101b1P7AI0A",
-        "69": "https://buy.stripe.com/dRm14mdtb7ZdgYZ2vj7AI0B",
-        "79": "https://buy.stripe.com/8x2cN49cVenBeQR7PD7AI0C",
-        "89": "https://buy.stripe.com/cNi5kC88R2ETdMN4Dr7AI0D",
-        "99": "https://buy.stripe.com/14A14m0Gp7ZddMNgm97AI0E",
+        "1": "https://buy.stripe.com/7sYfZgbl35R5bEF8TH7AI1b",
+        "9": "https://buy.stripe.com/6oU6oGfBjcft389c5T7AI0Z",
+        "14": "https://buy.stripe.com/28EbJ00GpdjxbEFb1P7AI10",
+        "19": "https://buy.stripe.com/3cIbJ0exfdjx6kl7PD7AI11",
+        "24": "https://buy.stripe.com/aFa00i60J3IX4cdee17AI12",
+        "29": "https://buy.stripe.com/4gMaEW0GpgvJeQRb1P7AI13",
+        "34": "https://buy.stripe.com/dRmeVcdtb5R53899XL7AI14",
+        "39": "https://buy.stripe.com/00wcN4fBj4N15gh4Dr7AI15",
+        "49": "https://buy.stripe.com/fZucN4bl3cftdMNb1P7AI16",
+        "59": "https://buy.stripe.com/28EfZgbl3cft101ee17AI17",
+        "69": "https://buy.stripe.com/6oU28qcp70wL5gh6Lz7AI18",
+        "79": "https://buy.stripe.com/aFa9AS60J1AP1014Dr7AI19",
+        "89": "https://buy.stripe.com/cNi9AS2Oxdjx2458TH7AI1a",
+        "99": "https://buy.stripe.com/cNi7sK0Gp6V9cIJgm97AI0Y",
 
         
     }
