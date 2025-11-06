@@ -410,7 +410,6 @@ keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
 keyboard.add(
     
     types.KeyboardButton("✨Discuter en tant que VIP"),
-    types.KeyboardButton("❗ Problème d'achat")
 )
 keyboard_admin = types.ReplyKeyboardMarkup(resize_keyboard=True)
 keyboard_admin.add(
@@ -675,7 +674,7 @@ async def handle_start(message: types.Message):
     # 1) Texte d’accueil
     await bot.send_message(
         user_id,
-        "🟢 Laura est en ligne",
+        "🟢 Lila est en ligne",
         reply_markup=keyboard
     )
 
