@@ -78,7 +78,9 @@ liens_paiement = {
     "179": "https://buy.stripe.com/7sY7sK88R7ZddMN5Hv7AI1x",
     "189": "https://buy.stripe.com/9B600iexf4N17opgm97AI1y",
     "199": "https://buy.stripe.com/dRm14mfBj93hfUV2vj7AI1z",
-    "209": "https://buy.stripe.com/3cIfZgbl31APaABb1P7AI1A"
+    "209": "https://buy.stripe.com/3cIfZgbl31APaABb1P7AI1A",
+    "500": "https://buy.stripe.com/7sY9ASbl3enB245b1P7AI1D",
+    "1000": "https://buy.stripe.com/9B63cu3SB3IX7opc5T7AI1E"
 }
 
 
@@ -288,7 +290,7 @@ async def handle_nath_global_stats(message: types.Message):
 
 
 # Liste des prix autorisés
-prix_list = [1, 3, 9, 14, 19, 24, 29, 34, 39, 44, 49, 59, 69, 79, 89, 99, 109, 119, 129, 139, 149, 159, 169, 179, 189, 199, 209]
+prix_list = [1, 3, 9, 14, 19, 24, 29, 34, 39, 44, 49, 59, 69, 79, 89, 99, 109, 119, 129, 139, 149, 159, 169, 179, 189, 199, 209, 500, 1000]
 
 # Liste blanche des liens autorisés
 WHITELIST_LINKS = [
@@ -624,14 +626,11 @@ async def handle_start(message: types.Message):
 
 
     # 2) Vidéo de présentation + bouton VIP
-    vip_kb = InlineKeyboardMarkup().add(
-        InlineKeyboardButton("💎 Débloque la suite", url=VIP_URL)
-    )
     await bot.send_video(
-        chat_id=user_id,
-        video=WELCOME_VIDEO_FILE_ID,
-        reply_markup=vip_kb
-    )
+    chat_id=user_id,
+    video=WELCOME_VIDEO_FILE_ID
+)
+
 
     # Envoi à tous les admins (vendeurs)
     try:
