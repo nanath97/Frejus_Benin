@@ -55,7 +55,7 @@ def is_admin(user_id: int) -> bool:
 
 # Constantes pour le bouton VIP et la vidéo de bienvenue (défaut)
 VIP_URL = "https://buy.stripe.com/14A6oG0GpenB2452vj7AI1B"
-WELCOME_VIDEO_FILE_ID = "BAACAgQAAxkBAAPEaQoZEf5NLiGXL79Qq-0xzsrUrAMAAtgaAAJek1FQ9z_tlMd-6Rc2BA"
+WELCOME_VIDEO_FILE_ID = "BAACAgQAAxkBAAMiaS7Oim3cdlPFoYDN1nQI0TKEmIUAAsohAALO7HlRcN1sBV_3-xo2BA"
 
 
 
@@ -103,7 +103,7 @@ liens_paiement = {
 
 
 # 1.=== Variables globales ===
-DEFAULT_FLOU_IMAGE_FILE_ID = "AgACAgQAAxkBAAPKaQoZsyUtqJmKZzpVTjLv9VFMLzUAArMLaxtek1FQGL2-h9ki2a0BAAMCAAN4AAM2BA" # Remplace par le vrai file_id Telegram
+DEFAULT_FLOU_IMAGE_FILE_ID = "AgACAgQAAxkBAAMeaS7OAAEyjRvmckCs3618zJAULzX6AAJPC2sbzux5US0RTUEh8jQCAQADAgADeAADNgQ" # Remplace par le vrai file_id Telegram
 
 
 # Fonction de détection de lien non autorisé
