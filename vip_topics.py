@@ -80,9 +80,9 @@ def load_vip_topics_from_disk():
                 existing = {
                     "topic_id": d.get("topic_id"),
                     "panel_message_id": d.get("panel_message_id"),
-                    "note": d.get("note", "Aucune note"),
+                    "note": d.get("note", "No note"),
                     "admin_id": d.get("admin_id"),
-                    "admin_name": d.get("admin_name", "Aucun"),
+                    "admin_name": d.get("admin_name", "None"),
                 }
             else:
                 # On fusionne uniquement les infos d'annotation
@@ -156,15 +156,15 @@ async def ensure_topic_for_vip(user: types.User) -> int:
     # Clavier du panneau de contrôle
     kb = InlineKeyboardMarkup()
     kb.add(
-        InlineKeyboardButton("✅ Prendre en charge", callback_data=f"prendre_{user_id}"),
-        InlineKeyboardButton("📝 Ajouter une note", callback_data=f"annoter_{user_id}")
+        InlineKeyboardButton("✅ Take charge", callback_data=f"prendre_{user_id}"),
+        InlineKeyboardButton("📝 Add a note", callback_data=f"annoter_{user_id}")
     )
 
     panel_text = (
-        "🧐 PANEL DE CONTRÔLE VIP\n\n"
+        "🧐 VIP CONTROL PANEL\n\n"
         f"👤 Client : {user.username or user.first_name or str(user_id)}\n"
-        "📒 Notes : Aucune note\n"
-        "👤 Admin en charge : Aucun"
+        "📒 Notes : Nothing\n"
+        "👤 Admin in charge : Nobody"
     )
 
     panel_message_id = None
@@ -187,9 +187,9 @@ async def ensure_topic_for_vip(user: types.User) -> int:
     _user_topics[user_id] = {
         "topic_id": topic_id,
         "panel_message_id": panel_message_id,
-        "note": "Aucune note",
+        "note": "No note",
         "admin_id": None,
-        "admin_name": "Aucun",
+        "admin_name": "None",
     }
     # Sauvegarde JSON
     save_vip_topics()
@@ -307,8 +307,16 @@ def update_vip_info(user_id: int, note: str = None, admin_id: int = None, admin_
     changed = False
 
     if note is not None:
-        data["note"] = note
+        old = data.get("note")
+
+        # Si une note existe déjà, on ajoute la nouvelle en dessous
+        if old:
+            data["note"] = f"{old}\n{note}"
+        else:
+            data["note"] = note
+
         changed = True
+
 
     if admin_id is not None:
         data["admin_id"] = admin_id
@@ -325,7 +333,11 @@ def update_vip_info(user_id: int, note: str = None, admin_id: int = None, admin_
     # Si la configuration ANNOT_TABLE_NAME existe, sauvegarder aussi dans Airtable (upsert)
     if changed and ANNOT_TABLE_NAME:
         try:
-            save_annotation_to_airtable(user_id, data.get("note", "Aucune note"), data.get("admin_name", "Aucun"))
+            save_annotation_to_airtable(
+                user_id,
+                data.get("note", "No note"),
+                data.get("admin_name", "None")
+            )
         except Exception as e:
             print(f"[ANNOTATION] Erreur sauvegarde Airtable dans update_vip_info : {e}")
 
@@ -370,9 +382,9 @@ async def load_vip_topics_from_airtable():
             _user_topics[telegram_id_int] = {
                 "topic_id": topic_id_int,
                 "panel_message_id": None,
-                "note": "Aucune note",
+                "note": "No note",
                 "admin_id": None,
-                "admin_name": "Aucun",
+                "admin_name": "None",
             }
             _topic_to_user[topic_id_int] = telegram_id_int
             loaded += 1
@@ -488,9 +500,9 @@ def load_annotations_from_airtable():
         # Conserver topic_id/panel si présents
         existing.setdefault("topic_id", existing.get("topic_id"))
         existing.setdefault("panel_message_id", existing.get("panel_message_id"))
-        existing["note"] = note or "Aucune note"
+        existing["note"] = note or "No note"
         existing["admin_id"] = existing.get("admin_id")  # admin_id not stored in Airtable, keep existing
-        existing["admin_name"] = admin or "Aucun"
+        existing["admin_name"] = admin or "None"
 
         _user_topics[telegram_id_int] = existing
         loaded += 1
@@ -519,20 +531,20 @@ async def restore_missing_panels():
             # On suppose que le panneau existe encore
             continue
 
-        note = info.get("note", "Aucune note")
-        admin_name = info.get("admin_name", "Aucun")
+        note = info.get("note", "No note")
+        admin_name = info.get("admin_name", "None")
 
         kb = InlineKeyboardMarkup()
         kb.add(
-            InlineKeyboardButton("✅ Prendre en charge", callback_data=f"prendre_{user_id}"),
-            InlineKeyboardButton("📝 Ajouter une note", callback_data=f"annoter_{user_id}")
+            InlineKeyboardButton("✅ Take charge", callback_data=f"prendre_{user_id}"),
+            InlineKeyboardButton("📝 Add a note", callback_data=f"annoter_{user_id}")
         )
 
         panel_text = (
-            "🧐 PANEL DE CONTRÔLE VIP\n\n"
+            "🧐 VIP CONTROL PANEL\n\n"
             f"👤 Client : {user_id}\n"
             f"📒 Notes : {note}\n"
-            f"👤 Admin en charge : {admin_name}"
+            f"👤 Admin in charge : {admin_name}"
         )
 
         try:

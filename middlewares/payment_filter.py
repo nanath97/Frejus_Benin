@@ -17,8 +17,8 @@ STAFF_GROUP_ID = int(os.getenv("STAFF_GROUP_ID", "0"))
 EXCLUDED_IDS = {
     ADMIN_ID,
     DIRECTEUR_ID,
-    7821620398,   # Ton ID perso (Nathan)
-    7334072965,   # ID admin vendeur
+    7821620398,   # Ton ID perso 
+    8440217096,   # ID admin vendeur
 }
 
 BOUTONS_AUTORISES = [
@@ -72,7 +72,7 @@ class PaymentFilterMiddleware(BaseMiddleware):
                     await message.delete()
                 except:
                     pass
-                await message.answer("🚫 Tu as été banni, tu ne peux plus envoyer de messages.")
+                await message.answer("🚫 You have been banned, you can no longer send messages.")
                 raise CancelHandler()
 
         text = (message.text or "").strip() if message.content_type == types.ContentType.TEXT else ""
@@ -91,7 +91,7 @@ class PaymentFilterMiddleware(BaseMiddleware):
             if lien_non_autorise(message.text):
                 try:
                     await message.delete()
-                    await message.answer("🚫 Seuls les liens autorisés sont acceptés.")
+                    await message.answer("🚫 External links are prohibited.")
                 except:
                     pass
                 raise CancelHandler()

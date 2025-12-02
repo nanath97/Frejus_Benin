@@ -20,6 +20,7 @@ dp.middleware.setup(PaymentFilterMiddleware(authorized_users))
 
 
 
+
 # map (chat_id, message_id) -> chat_id du client
 pending_replies = {}
 
@@ -32,7 +33,7 @@ last_messages = {}
 ADMIN_ID = 7821620398  # propriétaire historique (conserve pour compatibilité)
 OWNER_ID = ADMIN_ID
 # ensemble des admins autorisés (modifie/add si besoin)
-authorized_admin_ids = {7821620398, 6545079601}
+authorized_admin_ids = {7821620398, 8440217096}
 
 
 def is_admin(user_id: int) -> bool:
@@ -147,11 +148,11 @@ async def handle_stat(message: types.Message):
     if not email:
         await bot.send_message(
             message.chat.id,
-            "❌ Ton e-mail admin n’est pas configuré dans le bot. Parle à Nova Pulse pour le mettre à jour."
+            "❌ Your admin email is not configured in the bot. Talk to Nova Pulse to update it."
         )
         return
 
-    await bot.send_message(message.chat.id, "📥 Traitement de tes statistiques de vente en cours...")
+    await bot.send_message(message.chat.id, "📥 Processing your current sales statistics...")
 
     try:
         url = f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME.replace(' ', '%20')}"
@@ -206,23 +207,23 @@ async def handle_stat(message: types.Message):
         benefice_net = round(ventes_totales * 0.88, 2)
 
         message_final = (
-            f"📊 Tes statistiques de vente :\n\n"
-            f"💰 Ventes du jour : {ventes_jour}€\n"
-            f"💶 Ventes totales : {ventes_totales}€\n"
-            f"📦 Contenus vendus total : {contenus_vendus}\n"
+            f"📊 Your sales statistics :\n\n"
+            f"💰 Today's sales : {ventes_jour}€\n"
+            f"💶 Total sales : {ventes_totales}€\n"
+            f"📦 Total content sold : {contenus_vendus}\n"
             f"🌟 Clients VIP : {clients_vip}\n"
-            f"📈 Bénéfice estimé net : {benefice_net}€\n\n"
-            f"_Le bénéfice tient compte d’une commission de 12 %._"
+            f"📈 Estimated net profit : {benefice_net}€\n\n"
+            f"_The profit takes into account a 12% commission._"
         )
 
         vip_button = InlineKeyboardMarkup().add(
-            InlineKeyboardButton("📋 Voir mes VIPs", callback_data="voir_mes_vips")
+            InlineKeyboardButton("📋 See my VIPs", callback_data="voir_mes_vips")
         )
         await bot.send_message(message.chat.id, message_final, parse_mode="Markdown", reply_markup=vip_button)
 
     except Exception as e:
         print(f"Erreur dans /stat : {e}")
-        await bot.send_message(message.chat.id, "❌ Une erreur est survenue lors de la récupération des statistiques.")
+        await bot.send_message(message.chat.id, "❌ An error occurred while retrieving statistics.")
 
 import requests
 from datetime import datetime
@@ -354,7 +355,7 @@ async def verifier_les_liens_uniquement(message: types.Message):
     if lien_non_autorise(text_to_check):
         try:
             await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-            await bot.send_message(chat_id=message.chat.id, text="🚫 Les liens extérieurs sont interdits.")
+            await bot.send_message(chat_id=message.chat.id, text="🚫 External links are prohibited.")
             
             # Message perso au CEO pour avertir des fraudeurs
             await bot.send_message(DIRECTEUR_ID,
@@ -454,12 +455,12 @@ keyboard.add(
 )
 keyboard_admin = types.ReplyKeyboardMarkup(resize_keyboard=True)
 keyboard_admin.add(
-    types.KeyboardButton("📖 Commandes"),
-    types.KeyboardButton("📊 Statistiques")
+    types.KeyboardButton("📖 Control"),
+    types.KeyboardButton("📊 Statistics")
 )
 
 keyboard_admin.add(
-    types.KeyboardButton("✉️ Message à tous les VIPs")
+    types.KeyboardButton("✉️ Message to all VIPs")
 )
 
 from aiogram import types
@@ -490,7 +491,7 @@ async def handle_start(message: types.Message):
                     try:
                         await bot.send_message(
                             adm,
-                            f"⚠️ Problème ! Stripe a refusé le paiement de ton client {message.from_user.username or message.from_user.first_name}."
+                            f"⚠️ Problem! Stripe declined your customer's payment. {message.from_user.username or message.from_user.first_name}."
                         )
                     except Exception:
                         pass
@@ -537,7 +538,7 @@ async def handle_start(message: types.Message):
                 try:
                     await bot.send_message(
                         adm,
-                        f"💰 Nouveau paiement de {montant}€ de {message.from_user.username or message.from_user.first_name}."
+                        f"💰 New payment of {montant}€ to {message.from_user.username or message.from_user.first_name}."
                     )
                 except Exception:
                     pass
@@ -561,10 +562,10 @@ async def handle_start(message: types.Message):
                             "chat_id": int(os.getenv("STAFF_GROUP_ID", "0")),
                             "message_thread_id": topic_id,
                             "text": (
-                                f"💰 *Nouveau paiement contenu*\n\n"
+                                f"💰 *New payment content*\n\n"
                                 f"👤 Client : @{message.from_user.username or message.from_user.first_name}\n"
                                 f"💶 Montant : {montant} €\n"
-                                f"📊 Paiement enregistré dans Airtable."
+                                f"📊 Payment recorded in statistics."
                             ),
                             "parse_mode": "Markdown"
                         }
@@ -651,7 +652,7 @@ async def handle_start(message: types.Message):
     if is_admin(user_id):
         await bot.send_message(
             user_id,
-            "👋 Bonjour admin ! Tu peux voir le listing des commandes et consulter tes statistiques !",
+            "👋 Hello admin! You can view the control list and check your statistics !",
             reply_markup=keyboard_admin
         )
         return
@@ -670,19 +671,6 @@ async def handle_start(message: types.Message):
     video=WELCOME_VIDEO_FILE_ID
 )
 
-
-    # Envoi à tous les admins (vendeurs)
-    try:
-        for adm in authorized_admin_ids:
-            await bot.send_message(adm, texte_alerte_admin, parse_mode="Markdown")
-    except Exception as e:
-        print(f"Erreur envoi admin : {e}")
-
-    # Envoi au directeur (toi)
-    try:
-        await bot.send_message(DIRECTEUR_ID, texte_alerte_directeur, parse_mode="Markdown")
-    except Exception as e:
-        print(f"Erreur envoi directeur : {e}")
 
 # TEST A SUPPRIMER DEBUT
 
@@ -705,7 +693,7 @@ async def handle_vip_note(message: types.Message):
 
     note_text = (message.text or "").strip()
     if not note_text:
-        await message.reply("❌ Note vide, rien n'a été enregistré.")
+        await message.reply("❌ Empty note, nothing has been recorded.")
         raise CancelHandler()
 
     print(f"[NOTES] Note reçue pour VIP user_id={vip_user_id} par admin_id={admin_id} : {note_text}")
@@ -717,20 +705,20 @@ async def handle_vip_note(message: types.Message):
     admin_name = info.get("admin_name") or "Aucun"
 
     if not panel_message_id:
-        await message.reply("⚠️ Impossible de retrouver le panneau VIP pour ce client.")
+        await message.reply("⚠️ Unable to find the VIP panel for this customer.")
         raise CancelHandler()
-
+    full_note = info.get("note", note_text)
     panel_text = (
-        "🧐 PANEL DE CONTRÔLE VIP\n\n"
+        "🧐 VIP CONTROL PANEL\n\n"
         f"👤 Client : {vip_user_id}\n"
-        f"📒 Notes : {note_text}\n"
-        f"👤 Admin en charge : {admin_name}"
+        f"📒 Notes : {full_note}\n"
+        f"👤 Admin in charge : {admin_name}"
     )
 
     kb = InlineKeyboardMarkup()
     kb.add(
-        InlineKeyboardButton("✅ Prendre en charge", callback_data=f"prendre_{vip_user_id}"),
-        InlineKeyboardButton("📝 Ajouter une note", callback_data=f"annoter_{vip_user_id}")
+        InlineKeyboardButton("✅ Take charge", callback_data=f"prendre_{vip_user_id}"),
+        InlineKeyboardButton("📝 Add a note", callback_data=f"annoter_{vip_user_id}")
     )
 
     # On met à jour le panneau dans le STAFF_GROUP
@@ -742,7 +730,7 @@ async def handle_vip_note(message: types.Message):
     )
 
     # Petite confirmation dans le topic
-    await message.reply("✅ Note enregistrée et panneau mis à jour.", reply=False)
+    await message.reply("✅ Note recorded and panel updated.", reply=False)
 
     # 🔥 Très important : empêche les autres handlers (dont /env) de traiter ce message
     raise CancelHandler()
@@ -777,7 +765,7 @@ async def envoyer_contenu_payant(message: types.Message):
     if not message.reply_to_message:
         await bot.send_message(
             chat_id=admin_id,
-            text="❗ Utilise cette commande en réponse à un message du client."
+            text="❗ Use this command in response to a message from the client."
         )
         return
 
@@ -797,7 +785,7 @@ async def envoyer_contenu_payant(message: types.Message):
             if not note_text:
                 await bot.send_message(
                     chat_id=admin_id,
-                    text="❗ Note vide, rien n'a été enregistrée."
+                    text="❗ Empty note, nothing has been recorded."
                 )
                 return
 
@@ -812,19 +800,19 @@ async def envoyer_contenu_payant(message: types.Message):
                 or message.from_user.first_name
                 or str(admin_id)
             )
-
+            full_note = info.get("note", note_text)
             if topic_id and panel_message_id:
                 panel_text = (
-                    "🧐 PANEL DE CONTRÔLE VIP\n\n"
+                    "🧐 VIP CONTROL PANEL\n\n"
                     f"👤 Client : {vip_user_id}\n"
-                    f"📒 Notes : {note_text}\n"
-                    f"👤 Admin en charge : {admin_name}"
+                    f"📒 Notes : {full_note}\n"
+                    f"👤 Admin in charge : {admin_name}"
                 )
 
                 kb = InlineKeyboardMarkup()
                 kb.add(
-                    InlineKeyboardButton("✅ Prendre en charge", callback_data=f"prendre_{vip_user_id}"),
-                    InlineKeyboardButton("📝 Ajouter une note", callback_data=f"annoter_{vip_user_id}")
+                    InlineKeyboardButton("✅ Take charge", callback_data=f"prendre_{vip_user_id}"),
+                    InlineKeyboardButton("📝 Add a note", callback_data=f"annoter_{vip_user_id}")
                 )
 
                 await bot.edit_message_text(
@@ -836,25 +824,25 @@ async def envoyer_contenu_payant(message: types.Message):
 
                 await bot.send_message(
                     chat_id=admin_id,
-                    text="✅ Note enregistrée et panneau mis à jour."
+                    text="✅ Note recorded and panel updated."
                 )
                 return
             else:
                 await bot.send_message(
                     chat_id=admin_id,
-                    text="⚠️ Panneau VIP introuvable pour ce client."
+                    text="⚠️ VIP panel not found for this client."
                 )
                 return
 
         # 💬 CAS NORMAL (pas en mode note) → on garde ton comportement d'origine
-        await bot.send_message(chat_id=admin_id, text="❗ Impossible d'identifier le destinataire.")
+        await bot.send_message(chat_id=admin_id, text="❗ Unable to identify recipient.")
         return
 
     # 3) lire /envXX
     texte = message.caption or message.text or ""
     match = re.search(r"/env(\d+|vip)", texte.lower())
     if not match:
-        await bot.send_message(chat_id=admin_id, text="❗ Aucun code /envXX valide détecté.")
+        await bot.send_message(chat_id=admin_id, text="❗ No valid /envXX code detected.")
         return
 
     code = match.group(1)
@@ -862,7 +850,7 @@ async def envoyer_contenu_payant(message: types.Message):
     # ⚠️ on utilise le dict GLOBAL défini plus haut
     lien = liens_paiement.get(code)
     if not lien:
-        await bot.send_message(chat_id=admin_id, text="❗ Ce montant n'est pas reconnu dans les liens disponibles.")
+        await bot.send_message(chat_id=admin_id, text="❗ This amount is not recognized in the available links.")
         return
 
     # on remplace /envXX par le vrai lien Stripe
@@ -895,7 +883,7 @@ async def envoyer_contenu_payant(message: types.Message):
             {
                 "chat_id": STAFF_GROUP_ID,
                 "message_thread_id": topic_id,
-                "text": f"✅ Contenu prêt pour l'utilisateur {user_id}."
+                "text": f"✅ Content ready for the user {user_id}."
             }
         )
 
@@ -928,20 +916,20 @@ async def envoyer_contenu_payant(message: types.Message):
 
 
 
-@dp.message_handler(lambda message: message.text == "📖 Commandes" and is_admin(message.from_user.id))
+@dp.message_handler(lambda message: message.text == "📖 Control" and is_admin(message.from_user.id))
 async def show_commandes_admin(message: types.Message):
     commandes = (
-        "📖 *Liste des commandes disponibles :*\n\n"
-        "🔒 */envxx* – Envoyer un contenu payant €\n"
-        "_Tape cette commande avec le bon montant (ex. /env14) pour envoyer un contenu flouté avec lien de paiement de 14 €. Ton client recevra directement une image floutée avec le lien de paiement._\n\n"
-        "⚠️ ** – N'oublies pas de sélectionner le message du client à qui tu veux répondre\n\n"
-        "⚠️ ** – Voici la liste des prix : 9, 14, 19, 24, 29, 34, 39, 44, 49, 59, 69, 79, 89, 99, 109, 119, 129, 139, 149, 159, 169, 179, 189, 199, 209, 500, 1000\n\n"
-        "📬 *Besoin d’aide ?* Écris-moi par mail : novapulse.online@gmail.com"
+        "📖 *List of available commands :*\n\n"
+        "🔒 */envxx* – Send paid content €\n"
+        "_Enter this command with the correct amount (ex. /env14) to send blurred content with a payment link for €14. Your customer will receive a blurred image directly with the payment link._\n\n"
+        "⚠️ ** – Don't forget to select the message from the customer you want to reply to\n\n"
+        "⚠️ ** – Here is the price list : 9, 14, 19, 29, 39, 49, 59, 69, 79, 89, 99, 109, 119, 129, 139, 149, 159, 169, 179, 189, 199, 209, 500, 1000\n\n"
+        "📬 *Need help ?* Email me : novapulse.online@gmail.com"
     )
 
     # Création du bouton inline "Mise à jour"
     inline_keyboard = InlineKeyboardMarkup()
-    inline_keyboard.add(InlineKeyboardButton("🛠️ Mise à jour", callback_data="maj_bot"))
+    inline_keyboard.add(InlineKeyboardButton("🛠️ Update", callback_data="maj_bot"))
 
     await message.reply(commandes, parse_mode="Markdown", reply_markup=inline_keyboard)
 
@@ -950,9 +938,9 @@ async def show_commandes_admin(message: types.Message):
 @dp.callback_query_handler(lambda call: call.data == "maj_bot")
 async def handle_maj_bot(call: types.CallbackQuery):
     await bot.answer_callback_query(call.id)
-    await bot.send_message(call.message.chat.id, "🔄 Clique pour lancer la MAJ ➡️ : /start")
+    await bot.send_message(call.message.chat.id, "🔄 Click to start the update ➡️ : /start")
 
-@dp.message_handler(lambda message: message.text == "📊 Statistiques" and is_admin(message.from_user.id))
+@dp.message_handler(lambda message: message.text == "📊 Statistics" and is_admin(message.from_user.id))
 async def show_stats_direct(message: types.Message):
     await handle_stat(message)
 
@@ -966,69 +954,112 @@ async def handle_admin_message(message: types.Message):
     admin_id = message.from_user.id
     mode = admin_modes.get(admin_id)
 
-    # 1) L'admin ouvre le menu d'envoi groupé
-    if message.text == "✉️ Message à tous les VIPs":
+    print(
+        f"[ADMIN_MSG] from admin_id={admin_id}, chat_id={message.chat.id}, "
+        f"reply_to={getattr(message.reply_to_message, 'message_id', None)}"
+    )
+
+    # 1) MENU ENVOI GROUPÉ
+    if message.text == "✉️ Message to all VIPs":
         kb = InlineKeyboardMarkup()
         kb.add(
-            InlineKeyboardButton("📩 Message gratuit", callback_data="vip_message_gratuit")
+            InlineKeyboardButton("📩 Free message", callback_data="vip_message_gratuit")
         )
         await bot.send_message(
             chat_id=admin_id,
-            text="🧩 Choisis le type de message à envoyer à tous les VIPs :",
+            text="🧩 Choose the type of message to send to all VIPs :",
             reply_markup=kb
         )
         return
 
-    # 2) SI on est déjà dans un mode groupé → on traite, puis on sort
+    # 2) MODE DIFFUSION GROUPÉE
     if mode == "en_attente_message":
         admin_modes[admin_id] = None
         await traiter_message_groupé(message, admin_id=admin_id)
         return
 
-    if mode == "en_attente_message_payant":
-        admin_modes[admin_id] = None
-        await traiter_message_payant_groupé(message, admin_id=admin_id)
+    # 3) RÉPONSE À UN CLIENT (COMPORTEMENT NORMAL)
+
+    # 🔐 On oblige : reply + dans le STAFF_GROUP
+    if not message.reply_to_message or message.chat.id != STAFF_GROUP_ID:
+        await bot.send_message(
+            chat_id=admin_id,
+            text="❗To reply to a customer, reply to the message forwarded by the customer in the staff group (in their topic).",
+            parse_mode="Markdown"
+        )
         return
 
-    # 3) SINON → c'est le comportement normal (réponse à un client)
-    user_id = None
+    replied_msg_id = message.reply_to_message.message_id
+    key = (message.chat.id, replied_msg_id)
+    user_id = pending_replies.get(key)
 
-    if message.reply_to_message:
-        # 🔍 Ancien comportement : on se base sur le forward ou pending_replies
-        if message.reply_to_message.forward_from:
-            user_id = message.reply_to_message.forward_from.id
-        else:
-            user_id = pending_replies.get((message.chat.id, message.reply_to_message.message_id))
-    else:
-        # Pas de reply → si on est dans le supergroupe staff, on utilise le topic_id
-        if message.chat.id == STAFF_GROUP_ID and message.message_thread_id is not None:
-            user_id = get_user_id_by_topic_id(message.message_thread_id)
-        else:
-            print("❌ Pas de reply détecté (et pas dans un topic staff connu)")
-            return
+    print(f"[ADMIN_MSG] lookup pending_replies key={key} -> user_id={user_id}")
 
-    if not user_id:
-        await bot.send_message(chat_id=admin_id, text="❗Impossible d'identifier le destinataire.")
+    # 🔥 Sécurité : on refuse d'envoyer vers un admin
+    if (
+        not user_id
+        or user_id == admin_id
+        or user_id in authorized_admin_ids
+        or user_id == OWNER_ID
+    ):
+        await bot.send_message(
+            chat_id=admin_id,
+            text="❗Unable to identify the recipient *client*. "
+                 "Respond appropriately to the **last message forwarded from the customer** in their thread.",
+            parse_mode="Markdown"
+        )
         return
 
-    # ✅ Envoi normal (comme avant)
+    # 4) Envoi vers le client
     try:
         if message.text:
             await bot.send_message(chat_id=user_id, text=message.text)
+
         elif message.photo:
-            await bot.send_photo(chat_id=user_id, photo=message.photo[-1].file_id, caption=message.caption or "")
+            await bot.send_photo(
+                chat_id=user_id,
+                photo=message.photo[-1].file_id,
+                caption=message.caption or ""
+            )
+
         elif message.video:
-            await bot.send_video(chat_id=user_id, video=message.video.file_id, caption=message.caption or "")
+            await bot.send_video(
+                chat_id=user_id,
+                video=message.video.file_id,
+                caption=message.caption or ""
+            )
+
         elif message.document:
-            await bot.send_document(chat_id=user_id, document=message.document.file_id, caption=message.caption or "")
+            await bot.send_document(
+                chat_id=user_id,
+                document=message.document.file_id,
+                caption=message.caption or ""
+            )
+
         elif message.voice:
-            await bot.send_voice(chat_id=user_id, voice=message.voice.file_id)
+            await bot.send_voice(
+                chat_id=user_id,
+                voice=message.voice.file_id
+            )
+
         elif message.audio:
-            await bot.send_audio(chat_id=user_id, audio=message.audio.file_id, caption=message.caption or "")
+            await bot.send_audio(
+                chat_id=user_id,
+                audio=message.audio.file_id,
+                caption=message.caption or ""
+            )
+
         else:
-            await bot.send_message(chat_id=admin_id, text="📂 Type de message non supporté.")
+            await bot.send_message(
+                chat_id=admin_id,
+                text="📂 Message type not supported."
+            )
+
     except Exception as e:
-        await bot.send_message(chat_id=admin_id, text=f"❗Erreur admin -> client : {e}")
+        await bot.send_message(
+            chat_id=admin_id,
+            text=f"❗Erreur admin -> client : {e}"
+        )
 
 
 # ========== IMPORTS ESSENTIELS ==========
@@ -1065,7 +1096,7 @@ async def relay_from_client(message: types.Message):
             try:
                 await bot.send_message(
                     user_id,
-                    "🚫 Tu as été banni, tu ne peux plus envoyer de messages."
+                    "🚫 You have been banned, you can no longer send messages."
                 )
             except Exception:
                 pass
@@ -1106,7 +1137,7 @@ async def handle_prendre_en_charge(callback_query: types.CallbackQuery):
     try:
         vip_user_id = int(data.split("_", 1)[1])
     except Exception:
-        await callback_query.answer("ID VIP invalide.", show_alert=True)
+        await callback_query.answer("Invalid VIP ID.", show_alert=True)
         return
 
     # Déterminer le nom de l'admin
@@ -1129,20 +1160,20 @@ async def handle_prendre_en_charge(callback_query: types.CallbackQuery):
     note_text = info.get("note", "Aucune note")
 
     if not panel_message_id:
-        await callback_query.answer("Panneau introuvable pour ce VIP.", show_alert=True)
+        await callback_query.answer("Unable to find the panel for this VIP.", show_alert=True)
         return
 
     panel_text = (
-        "🧐 PANEL DE CONTRÔLE VIP\n\n"
+        "🧐 VIP CONTROL PANEL\n\n"
         f"👤 Client : {vip_user_id}\n"
         f"📒 Notes : {note_text}\n"
-        f"👤 Admin en charge : {admin_name}"
+        f"👤 Admin in charge : {admin_name}"
     )
 
     kb = InlineKeyboardMarkup()
     kb.add(
-        InlineKeyboardButton("✅ Prendre en charge", callback_data=f"prendre_{vip_user_id}"),
-        InlineKeyboardButton("📝 Ajouter une note", callback_data=f"annoter_{vip_user_id}")
+        InlineKeyboardButton("✅ Take charge", callback_data=f"prendre_{vip_user_id}"),
+        InlineKeyboardButton("📝 Add a note", callback_data=f"annoter_{vip_user_id}")
     )
 
     # On met à jour le panneau
@@ -1153,7 +1184,7 @@ async def handle_prendre_en_charge(callback_query: types.CallbackQuery):
         reply_markup=kb
     )
 
-    await callback_query.answer("✅ Tu es maintenant en charge de ce VIP.")
+    await callback_query.answer("✅ You are now in charge of this VIP.")
 
 
 
@@ -1169,14 +1200,14 @@ async def handle_annoter_vip(callback_query: types.CallbackQuery):
 
     # Vérifier qu'on clique bien depuis le STAFF_GROUP
     if callback_query.message.chat.id != STAFF_GROUP_ID:
-        await callback_query.answer("Action réservée au staff.", show_alert=True)
+        await callback_query.answer("Action reserved for staff.", show_alert=True)
         return
 
     # Récupère l'user_id du VIP depuis la callback
     try:
         user_id = int(callback_query.data.split("_", 1)[1])
     except Exception:
-        await callback_query.answer("Données invalides.", show_alert=True)
+        await callback_query.answer("Invalid data.", show_alert=True)
         return
 
     # Si l'admin est déjà en mode note, renvoyer une info et ne rien re-créer
@@ -1184,10 +1215,10 @@ async def handle_annoter_vip(callback_query: types.CallbackQuery):
         current_target = pending_notes.get(admin_id)
         # Si c'est pour le même client, on informe
         if current_target == user_id:
-            await callback_query.answer("📝 Tu es déjà en mode annotation pour ce client. Envoie ta note dans le topic.", show_alert=False)
+            await callback_query.answer("📝 You are already in annotation mode for this client. Send your note in the topic.", show_alert=False)
             return
         # Sinon, prévenir que l'admin est déjà en mode note pour un autre client
-        await callback_query.answer("🔔 Tu es actuellement en mode annotation pour un autre client. Termine ou annule d'abord.", show_alert=True)
+        await callback_query.answer("🔔 You are currently in annotation mode for another client. Please finish or cancel first.", show_alert=True)
         return
 
     # On récupère les infos déjà stockées (topic_id, panel_message_id, etc.)
@@ -1195,7 +1226,7 @@ async def handle_annoter_vip(callback_query: types.CallbackQuery):
     topic_id = info.get("topic_id")
 
     if not topic_id:
-        await callback_query.answer("Impossible de retrouver le topic VIP.", show_alert=True)
+        await callback_query.answer("Unable to find the VIP topic.", show_alert=True)
         return
 
     # On passe cet admin en "mode note" pour ce user_id
@@ -1212,9 +1243,9 @@ async def handle_annoter_vip(callback_query: types.CallbackQuery):
                 "chat_id": STAFF_GROUP_ID,
                 "message_thread_id": topic_id,
                 "text": (
-                    f"📝 Envoie maintenant ta note pour le client {user_id} dans ce topic.\n"
-                    "➡️ Le prochain message que tu écris ici sera enregistré comme NOTE.\n\n"
-                    "Si tu veux annuler : envoie `/annuler_note`."
+                    f"📝 Send your note to the customer now {user_id} in this topic.\n"
+                    "➡️ The next message you write here will be saved as a NOTE.\n\n"
+                    "If you want to cancel: press `/annuler_note`."
                 ),
             },
         )
@@ -1222,7 +1253,7 @@ async def handle_annoter_vip(callback_query: types.CallbackQuery):
         # Nettoyage si envoi échoue (pour éviter rester bloqué en pending)
         pending_notes.pop(admin_id, None)
         print(f"[NOTES] Erreur envoi prompt annotation (callback annoter_) : {e}")
-        await callback_query.answer("Impossible d'envoyer l'invite d'annotation.", show_alert=True)
+        await callback_query.answer("Unable to send annotation prompt.", show_alert=True)
 
 
 
@@ -1237,13 +1268,13 @@ async def choix_type_message_vip(call: types.CallbackQuery):
     await call.answer()
     admin_id = call.from_user.id
 
-    # On ne garde que le mode "en_attente_message" = gratuit
     admin_modes[admin_id] = "en_attente_message"
 
     await bot.send_message(
         chat_id=admin_id,
-        text="✍️ Envoie maintenant le message (texte/photo/vidéo) à diffuser GRATUITEMENT à tous tes VIPs."
+        text="✍️ Send now the message (text/photo/video) to be broadcast to all your VIPs for FREE."
     )
+
 
 
 # ========== TRAITEMENT MESSAGE GROUPÉ GRATUIT ==========
@@ -1287,15 +1318,15 @@ async def traiter_message_groupé(message: types.Message, admin_id=None):
         preview = "[Note vocale]"
 
     else:
-        await message.reply("❌ Message non supporté.")
+        await message.reply("❌ Message not supported.")
         return
 
     kb = InlineKeyboardMarkup(row_width=2)
     kb.add(
-        InlineKeyboardButton("✅ Confirmer l’envoi", callback_data="confirmer_envoi_groupé"),
-        InlineKeyboardButton("❌ Annuler l’envoi", callback_data="annuler_envoi_groupé")
+        InlineKeyboardButton("✅ Confirm sending", callback_data="confirmer_envoi_groupé"),
+        InlineKeyboardButton("❌ Cancel sending", callback_data="annuler_envoi_groupé")
     )
-    await message.reply(f"Prévisualisation :\n\n{preview}", reply_markup=kb)
+    await message.reply(f"Preview :\n\n{preview}", reply_markup=kb)
 
 
 
@@ -1308,7 +1339,7 @@ async def confirmer_envoi_groupé(call: types.CallbackQuery):
     message_data = pending_mass_message.get(admin_id)
 
     if not message_data:
-        await call.message.edit_text("❌ Aucun message en attente à envoyer.")
+        await call.message.edit_text("❌ No messages waiting to be sent.")
         return
 
     # 1️⃣ Récupérer l'e-mail de cet admin
@@ -1316,7 +1347,7 @@ async def confirmer_envoi_groupé(call: types.CallbackQuery):
     if not email:
         await bot.send_message(
             chat_id=admin_id,
-            text="❌ Ton e-mail admin n’est pas configuré dans le bot. Parle à Nova Pulse pour le mettre à jour."
+            text="❌ Your admin email is not configured in the bot. Talk to Nova Pulse to update it."
         )
         pending_mass_message.pop(admin_id, None)
         return
@@ -1328,7 +1359,7 @@ async def confirmer_envoi_groupé(call: types.CallbackQuery):
         print(f"[MASS_VIP] Erreur en récupérant les VIPs pour {email} : {e}")
         await bot.send_message(
             chat_id=admin_id,
-            text="❌ Impossible de récupérer la liste de tes VIPs pour le moment."
+            text="❌ Unable to retrieve your VIP list at this time."
         )
         pending_mass_message.pop(admin_id, None)
         return
@@ -1336,14 +1367,14 @@ async def confirmer_envoi_groupé(call: types.CallbackQuery):
     if not vip_ids:
         await bot.send_message(
             chat_id=admin_id,
-            text="ℹ️ Aucun VIP trouvé pour toi. Rien à envoyer."
+            text="ℹ️ No VIPs found for you. Nothing to send."
         )
         pending_mass_message.pop(admin_id, None)
         return
 
     await bot.send_message(
         chat_id=admin_id,
-        text=f"⏳ Envoi du message à {len(vip_ids)} VIP(s)..."
+        text=f"⏳ Send message to {len(vip_ids)} VIP(s)..."
     )
 
     envoyes = 0
@@ -1392,17 +1423,17 @@ async def confirmer_envoi_groupé(call: types.CallbackQuery):
 
     await bot.send_message(
         chat_id=admin_id,
-        text=f"✅ Envoyé à {envoyes} VIP(s).\n⚠️ Échecs : {erreurs}"
+        text=f"✅ Sent to {envoyes} VIP(s).\n⚠️ Failures : {erreurs}"
     )
     pending_mass_message.pop(admin_id, None)
 
 
 @dp.callback_query_handler(lambda call: call.data == "annuler_envoi_groupé")
 async def annuler_envoi_groupé(call: types.CallbackQuery):
-    await call.answer("❌ Envoi annulé.")
+    await call.answer("❌ Sending canceled.")
     admin_id = call.from_user.id
     pending_mass_message.pop(admin_id, None)
-    await call.message.edit_text("❌ Envoi annulé.")
+    await call.message.edit_text("❌ Sending canceled.")
 
 
 
@@ -1413,10 +1444,10 @@ async def voir_mes_vips(callback_query: types.CallbackQuery):
     email = ADMIN_EMAILS.get(telegram_id)
 
     if not email:
-        await bot.send_message(telegram_id, "❌ Ton e-mail admin n’est pas reconnu.")
+        await bot.send_message(telegram_id, "❌ Your admin email is not recognized.")
         return
 
-    await callback_query.answer("Chargement de tes VIPs...")
+    await callback_query.answer("Loading your VIPs...")
 
     headers = {
         "Authorization": f"Bearer {os.getenv('AIRTABLE_API_KEY')}"
@@ -1429,12 +1460,12 @@ async def voir_mes_vips(callback_query: types.CallbackQuery):
 
     response = requests.get(url, headers=headers, params=params)
     if response.status_code != 200:
-        await bot.send_message(telegram_id, f"❌ Erreur Airtable : {response.status_code}\n\n{response.text}")
+        await bot.send_message(telegram_id, f"❌ Airtable error : {response.status_code}\n\n{response.text}")
         return
 
     records = response.json().get("records", [])
     if not records:
-        await bot.send_message(telegram_id, "📭 Aucun enregistrement trouvé pour toi.")
+        await bot.send_message(telegram_id, "📭 No records found for you.")
         return
 
     # Étape 1 : repérer les pseudos ayant AU MOINS un paiement > 0 (Type acces = paiement ou vip)
@@ -1454,7 +1485,7 @@ async def voir_mes_vips(callback_query: types.CallbackQuery):
             pseudos_vip.add(pseudo)
 
     if not pseudos_vip:
-        await bot.send_message(telegram_id, "📭 Tu n'as encore aucun client VIP (aucun paiement enregistré).")
+        await bot.send_message(telegram_id, "📭 You don't have any VIP customers yet (no payments recorded).")
         return
 
     # Étape 2 : additionner TOUS les montants (Paiement + VIP) de ces pseudos uniquement
@@ -1479,7 +1510,7 @@ async def voir_mes_vips(callback_query: types.CallbackQuery):
 
     try:
         # Construction du message final avec tri et top 3
-        message = "📋 Voici tes clients VIP (avec tous leurs paiements) :\n\n"
+        message = "📋 Here are your VIP customers (with all their payments) :\n\n"
         sorted_vips = sorted(montants_par_pseudo.items(), key=lambda x: x[1], reverse=True)
 
         for pseudo, total in sorted_vips:
@@ -1500,6 +1531,6 @@ async def voir_mes_vips(callback_query: types.CallbackQuery):
         import traceback
         error_text = traceback.format_exc()
         print("❌ ERREUR DANS VIPS + TOP 3 :\n", error_text)
-        await bot.send_message(telegram_id, "❌ Une erreur est survenue lors de l'affichage des VIPs.")
+        await bot.send_message(telegram_id, "❌ An error occurred while displaying VIPs.")
 
 #fin du 19 juillet 2025 mettre le tableau de vips
