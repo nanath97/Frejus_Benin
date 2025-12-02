@@ -17,21 +17,6 @@ from vip_topics import is_vip, get_user_id_by_topic_id, get_panel_message_id_by_
 dp.middleware.setup(PaymentFilterMiddleware(authorized_users))
 
 
-# Handler pour récupérer le file_id d'une photo
-@dp.message_handler(content_types=['photo'])
-async def get_photo_file_id(message: types.Message):
-    file_id = message.photo[-1].file_id  # on prend la meilleure résolution
-    await message.reply(f"📸 File ID de cette photo :\n{file_id}")
-
-# Handler pour récupérer le file_id d'une vidéo
-@dp.message_handler(content_types=['video'])
-async def get_video_file_id(message: types.Message):
-    file_id = message.video.file_id
-    await message.reply(f"🎬 File ID de cette vidéo :\n{file_id}")
-
-
-
-
 
 
 
