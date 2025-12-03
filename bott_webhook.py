@@ -40,7 +40,7 @@ def is_admin(user_id: int) -> bool:
     return user_id in authorized_admin_ids or user_id == OWNER_ID
 
 # Constantes pour le bouton VIP et la vidéo de bienvenue (défaut)
-VIP_URL = "https://buy.stripe.com/14A6oG0GpenB2452vj7AI1B"
+VIP_URL = "https://buy.stripe.com/bJe6oG0Gp0wLbEF1rf7AI1H"
 WELCOME_VIDEO_FILE_ID = "BAACAgQAAxkBAAMiaS7Oim3cdlPFoYDN1nQI0TKEmIUAAsohAALO7HlRcN1sBV_3-xo2BA"
 
 
@@ -60,31 +60,31 @@ paiements_recents = defaultdict(list)  # ex : {14: [datetime1, datetime2]}
 
 # ====== LIENS PAIEMENT GLOBALS (utilisés pour /env et pour l'envoi groupé payant) ======
 liens_paiement = {
-    "1": "https://buy.stripe.com/14A6oG0GpenB2452vj7AI1B",
-    "9": "https://buy.stripe.com/14A14m4WFfrFdMN5Hv7AI1f",
+    "1": "https://buy.stripe.com/bJe6oG0Gp0wLbEF1rf7AI1H",
+    "9": "https://buy.stripe.com/4gM3cucp7djx4cd3zn7AI1I",
     "14": "https://buy.stripe.com/14A8wOexf1AP2453zn7AI1g",
-    "19": "https://buy.stripe.com/7sY6oG2Ox6V9389ee17AI1h",
-    "29": "https://buy.stripe.com/cNi8wO1Kt0wLaAB2vj7AI1i",
-    "39": "https://buy.stripe.com/eVqeVcgFn6V94cd6Lz7AI1j",
-    "49": "https://buy.stripe.com/6oUeVccp77ZddMN7PD7AI1k",
-    "59": "https://buy.stripe.com/7sYfZgcp793h6kl2vj7AI1l",
-    "69": "https://buy.stripe.com/eVq28qfBjdjxaAB2vj7AI1m",
-    "79": "https://buy.stripe.com/dRm7sK74NfrFfUV5Hv7AI1n",
-    "89": "https://buy.stripe.com/aFa9ASexfbbp101b1P7AI1o",
-    "99": "https://buy.stripe.com/bJeaEW9cVcft9wx9XL7AI1p",
-    "109": "https://buy.stripe.com/3cI8wOfBj1AP6klee17AI1q",
-    "119": "https://buy.stripe.com/cNifZgfBj3IX1017PD7AI1r",
-    "129": "https://buy.stripe.com/14A3cu1Kt4N1cIJ9XL7AI1s",
-    "139": "https://buy.stripe.com/3cI00i1Kta7lbEF1rf7AI1t",
-    "149": "https://buy.stripe.com/3cI6oGbl3djxdMNfi57AI1u",
-    "159": "https://buy.stripe.com/7sYdR83SB7ZdeQR9XL7AI1v",
-    "169": "https://buy.stripe.com/aFa00i60Jdjx389c5T7AI1w",
-    "179": "https://buy.stripe.com/7sY7sK88R7ZddMN5Hv7AI1x",
-    "189": "https://buy.stripe.com/9B600iexf4N17opgm97AI1y",
-    "199": "https://buy.stripe.com/dRm14mfBj93hfUV2vj7AI1z",
-    "209": "https://buy.stripe.com/3cIfZgbl31APaABb1P7AI1A",
-    "500": "https://buy.stripe.com/7sY9ASbl3enB245b1P7AI1D",
-    "1000": "https://buy.stripe.com/9B63cu3SB3IX7opc5T7AI1E"
+    "19": "https://buy.stripe.com/eVq00i9cVbbp101d9X7AI1J",
+    "29": "https://buy.stripe.com/00w6oG1Ktcft9wx2vj7AI1K",
+    "39": "https://buy.stripe.com/eVq6oGcp70wLeQR4Dr7AI1L",
+    "49": "https://buy.stripe.com/eVq28q60J7Zd2455Hv7AI1M",
+    "59": "https://buy.stripe.com/fZufZg2Ox4N13898TH7AI1N",
+    "69": "https://buy.stripe.com/bJedR84WF4N12453zn7AI1O",
+    "79": "https://buy.stripe.com/8x29AS60J3IX2459XL7AI1P",
+    "89": "https://buy.stripe.com/8x2dR860J2ET389ee17AI1Q",
+    "99": "https://buy.stripe.com/eVq00i9cV7Zd8st6Lz7AI1R",
+    "109": "https://buy.stripe.com/8x2eVcgFn2ET5gh7PD7AI1S",
+    "119": "https://buy.stripe.com/00wfZg3SBbbp2454Dr7AI1T",
+    "129": "https://buy.stripe.com/fZu5kCdtbgvJaABfi57AI1U",
+    "139": "https://buy.stripe.com/7sY7sK1KtgvJ2450nb7AI1V",
+    "149": "https://buy.stripe.com/6oUdR80Gp0wL4cdc5T7AI1W",
+    "159": "https://buy.stripe.com/dRmcN4cp793h101c5T7AI1X",
+    "169": "https://buy.stripe.com/7sY5kCdtb7Zd8stgm97AI1Y",
+    "179": "https://buy.stripe.com/fZueVcfBja7l6kl9XL7AI1Z",
+    "189": "https://buy.stripe.com/eVq00iagZ93hcIJ4Dr7AI20",
+    "199": "https://buy.stripe.com/7sYeVcgFn0wLeQRfi57AI21",
+    "209": "https://buy.stripe.com/4gM9AS4WF93h1013zn7AI22",
+    "500": "https://buy.stripe.com/4gMdR89cV2ET5gh2vj7AI23",
+    "1000": "https://buy.stripe.com/eVqeVccp72ET7op3zn7AI24"
 }
 
 
@@ -189,7 +189,7 @@ async def handle_stat(message: types.Message):
             except Exception:
                 montant = 0.0
 
-            # 💶 Ventes du mois (on ignore les lignes VIP “0 €”)
+            # 💶 Ventes du mois (on ignore les lignes VIP “0 $”)
             if mois == mois_courant and montant > 0 and type_acces != "vip":
                 ventes_totales += montant
 
@@ -208,11 +208,11 @@ async def handle_stat(message: types.Message):
 
         message_final = (
             f"📊 Your sales statistics :\n\n"
-            f"💰 Today's sales : {ventes_jour}€\n"
-            f"💶 Total sales : {ventes_totales}€\n"
+            f"💰 Today's sales : {ventes_jour}$\n"
+            f"💶 Total sales : {ventes_totales}$\n"
             f"📦 Total content sold : {contenus_vendus}\n"
             f"🌟 Clients VIP : {clients_vip}\n"
-            f"📈 Estimated net profit : {benefice_net}€\n\n"
+            f"📈 Estimated net profit : {benefice_net}$\n\n"
             f"_The profit takes into account a 12% commission._"
         )
 
@@ -309,7 +309,7 @@ async def handle_nath_global_stats(message: types.Message):
             benefice_nath = round(total * 0.12, 2)
             total_global += total
             lignes.append(
-                f"• {email} → {total:.2f} €  |  Vendeur : {benefice_vendeur:.2f} €  |  Toi (12 %) : {benefice_nath:.2f} €"
+                f"• {email} → {total:.2f} €  |  Vendeur : {benefice_vendeur:.2f} €  |  Toi (12 %) : {benefice_nath:.2f} $"
             )
 
         total_benefice_nath = round(total_global * 0.12, 2)
@@ -529,7 +529,7 @@ async def handle_start(message: types.Message):
 
             await bot.send_message(
                 user_id,
-                f"✅ Thank you for your payment of {montant}€ 💖 ! Here is your content...\n\n"
+                f"✅ Thank you for your payment of {montant}$ 💖 ! Here is your content...\n\n"
                 f"_❗️If you have any concerns about your order, please contact us at novapulse.online@gmail.com_",
                 parse_mode="Markdown"
             )
@@ -538,7 +538,7 @@ async def handle_start(message: types.Message):
                 try:
                     await bot.send_message(
                         adm,
-                        f"💰 New payment of {montant}€ to {message.from_user.username or message.from_user.first_name}."
+                        f"💰 New payment of {montant}$ to {message.from_user.username or message.from_user.first_name}."
                     )
                 except Exception:
                     pass
@@ -564,7 +564,7 @@ async def handle_start(message: types.Message):
                             "text": (
                                 f"💰 *New payment content*\n\n"
                                 f"👤 Client : @{message.from_user.username or message.from_user.first_name}\n"
-                                f"💶 Montant : {montant} €\n"
+                                f"💶 Montant : {montant} $\n"
                                 f"📊 Payment recorded in statistics."
                             ),
                             "parse_mode": "Markdown"
@@ -635,7 +635,7 @@ async def handle_start(message: types.Message):
                         "text": (
                             f"🌟 *Nouveau VIP confirmé*\n\n"
                             f"👤 Client : @{message.from_user.username or message.from_user.first_name}\n"
-                            f"💶 Montant : 1 €\n"
+                            f"💶 Montant : 1 $\n"
                             f"📊 Accès VIP enregistré dans le dashboard."
                         ),
                         "parse_mode": "Markdown"
@@ -909,7 +909,7 @@ async def envoyer_contenu_payant(message: types.Message):
     )
     await bot.send_message(
         chat_id=user_id,
-        text=f"_🔒 This content {code} € is locked. Click on the link above to unlock it._",
+        text=f"_🔒 This content {code} $ is locked. Click on the link above to unlock it._",
  
         parse_mode="Markdown"
     )
@@ -920,10 +920,10 @@ async def envoyer_contenu_payant(message: types.Message):
 async def show_commandes_admin(message: types.Message):
     commandes = (
         "📖 *List of available commands :*\n\n"
-        "🔒 */envxx* – Send paid content €\n"
-        "_Enter this command with the correct amount (ex. /env14) to send blurred content with a payment link for €14. Your customer will receive a blurred image directly with the payment link._\n\n"
+        "🔒 */envxx* – Send paid content $\n"
+        "_Enter this command with the correct amount (ex. /env29) to send blurred content with a payment link for $29. Your customer will receive a blurred image directly with the payment link._\n\n"
         "⚠️ ** – Don't forget to select the message from the customer you want to reply to\n\n"
-        "⚠️ ** – Here is the price list : 9, 14, 19, 29, 39, 49, 59, 69, 79, 89, 99, 109, 119, 129, 139, 149, 159, 169, 179, 189, 199, 209, 500, 1000\n\n"
+        "⚠️ ** – Here is the price list : 9, 19, 29, 39, 49, 59, 69, 79, 89, 99, 109, 119, 129, 139, 149, 159, 169, 179, 189, 199, 209, 500, 1000\n\n"
         "📬 *Need help ?* Email me : novapulse.online@gmail.com"
     )
 
@@ -1514,7 +1514,7 @@ async def voir_mes_vips(callback_query: types.CallbackQuery):
         sorted_vips = sorted(montants_par_pseudo.items(), key=lambda x: x[1], reverse=True)
 
         for pseudo, total in sorted_vips:
-            message += f"👤 @{pseudo} — {round(total)} €\n"
+            message += f"👤 @{pseudo} — {round(total)} $\n"
 
         # 🏆 Top 3
         top3 = sorted_vips[:3]
@@ -1523,7 +1523,7 @@ async def voir_mes_vips(callback_query: types.CallbackQuery):
             for i, (pseudo, total) in enumerate(top3):
                 place = ["🥇", "🥈", "🥉"]
                 emoji = place[i] if i < len(place) else f"#{i+1}"
-                message += f"{emoji} @{pseudo} — {round(total)} €\n"
+                message += f"{emoji} @{pseudo} — {round(total)} $\n"
 
         await bot.send_message(telegram_id, message, parse_mode="Markdown")
 
