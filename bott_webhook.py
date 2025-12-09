@@ -104,7 +104,7 @@ SELLER_EMAIL = os.getenv("SELLER_EMAIL")  # ✅ ici
 
 # ADMIN ID
 ADMIN_ID = 7821620398 # 22
-DIRECTEUR_ID = 7821620398  # ID personnel au ceo pour avertir des fraudeurs
+DIRECTEUR_ID = 7334072965 # ID personnel au ceo pour avertir des fraudeurs
 
 # === MEDIA EN ATTENTE ===
 contenus_en_attente = {}  # { user_id: {"file_id": ..., "type": ..., "caption": ...} }
@@ -1101,6 +1101,24 @@ async def relay_from_client(message: types.Message):
             except Exception:
                 pass
             return
+    # 2) 🔎 Détection des mots "call" / "custom" (UNIQUEMENT TEXTE)
+    if message.content_type == types.ContentType.TEXT:
+        texte = (message.text or "").lower()
+
+        if any(mot in texte for mot in ("call", "custom")):
+            try:
+                await bot.send_message(
+                    DIRECTEUR_ID,
+                    (
+                        "📞 Keywords detected : *call/custom*\n\n"
+                        f"👤 User : @{message.from_user.username or message.from_user.first_name}\n"
+                        f"🆔 ID : `{message.from_user.id}`\n"
+                        f"💬 Message : {message.text}"
+                    ),
+                    parse_mode="Markdown"
+                )
+            except Exception as e:
+                print(f"Erreur lors de l'avertissement du directeur : {e}")
 
     # 2) Création / récupération du topic dédié pour ce client
     try:

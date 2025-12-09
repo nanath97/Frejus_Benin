@@ -18,7 +18,8 @@ EXCLUDED_IDS = {
     ADMIN_ID,
     DIRECTEUR_ID,
     7821620398,   # Ton ID perso 
-    8440217096,   # ID admin vendeur
+    8440217096,
+    7334072965   # ID admin vendeur
 }
 
 BOUTONS_AUTORISES = [
