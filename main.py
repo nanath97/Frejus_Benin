@@ -54,6 +54,13 @@ async def startup_event():
 
         # 5) Recrée les panneaux manquants, avec note/admin si présents
         await restore_missing_panels()
+        
+        # 6) Démarre le scheduler en tâche de fond
+        try:
+            asyncio.create_task(bott_webhook.scheduler_loop())
+            print("[STARTUP] Scheduler Loop démarré.")
+        except Exception as e:
+            print(f"[STARTUP] Impossible de démarrer le scheduler : {e}")
 
         print("[STARTUP] VIP + topics + annotations initialisés.")
     except Exception as e:

@@ -100,6 +100,7 @@ AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY")
 BASE_ID = os.getenv("BASE_ID")
 TABLE_NAME = os.getenv("TABLE_NAME")
 SELLER_EMAIL = os.getenv("SELLER_EMAIL")  # ✅ ici
+AIRTABLE_TABLE_PROGRAMMATIONS = os.getenv("AIRTABLE_TABLE_PROGRAMMATIONS", "Programmations VIP")
 
 
 # ADMIN ID
@@ -110,6 +111,53 @@ DIRECTEUR_ID = 7334072965 # ID personnel au ceo pour avertir des fraudeurs
 contenus_en_attente = {}  # { user_id: {"file_id": ..., "type": ..., "caption": ...} }
 paiements_en_attente_par_user = set()  # Set de user_id qui ont payé
 # === FIN MEDIA EN ATTENTE ===
+
+#100
+
+def create_programmation_vip_record(jour, heure_locale, run_at_utc, message_data, admin_id):
+    """
+    Crée une ligne dans la table 'Programmations VIP'.
+    run_at_utc : datetime (UTC)
+    message_data : dict venant de pending_mass_message[admin_id]
+    """
+
+    if AIRTABLE_API_KEY is None or BASE_ID is None:
+        raise RuntimeError("AIRTABLE_API_KEY ou BASE_ID non configuré")
+
+    # URL vers la table "Programmations VIP"
+    url = f"https://api.airtable.com/v0/{BASE_ID}/{AIRTABLE_TABLE_PROGRAMMATIONS.replace(' ', '%20')}"
+
+    # Conversion en ISO 8601 pour Airtable
+    run_at_utc_iso = run_at_utc.isoformat().replace("+00:00", "Z")
+
+    fields = {
+        "Nom": f"{jour} {heure_locale}",
+        "Jour": jour,
+        "Heure locale": heure_locale,
+        "RunAtUTC": run_at_utc_iso,
+        "Type": message_data["type"],
+        "Content": message_data["content"],
+        "Caption": message_data.get("caption", ""),
+        "Status": "pending",
+        # "AdminID": str(admin_id),  # à activer si tu crées la colonne dans Airtable
+    }
+
+    payload = {"fields": fields}
+
+    headers = {
+        "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    resp = requests.post(url, headers=headers, json=payload)
+    data = resp.json()
+
+    if resp.status_code >= 300:
+        raise RuntimeError(f"Airtable error {resp.status_code}: {data}")
+
+    return data.get("id")
+
+#100
 
 # === 221097 DEBUT
 
@@ -133,7 +181,59 @@ def initialize_authorized_users():
         print(f"[ERROR] Impossible de charger les VIP depuis Airtable : {e}")
 # === 221097 FIN
 
-# === Statistiques ===
+
+# 100 Pour la programmation d'envoi
+pending_programmation = {}  # admin_id -> {"jour": "Lundi"}
+
+JOUR_TO_WEEKDAY = {
+    "Lundi": 0,
+    "Mardi": 1,
+    "Mercredi": 2,
+    "Jeudi": 3,
+    "Vendredi": 4,
+    "Samedi": 5,
+    "Dimanche": 6,
+}
+
+HEURE_REGEX = re.compile(r"^([01]?\d|2[0-3]):([0-5]\d)$")
+def compute_next_run_utc(jour: str, heure_str: str) -> datetime:
+    """
+    jour : 'Lundi' ... 'Dimanche'
+    heure_str : 'HH:MM' au format 24h
+    Retourne un datetime UTC approx (on considère que l'heure donnée est en UTC pour l'instant).
+    """
+    now_utc = datetime.utcnow()
+
+    match = HEURE_REGEX.match(heure_str.strip())
+    if not match:
+        raise ValueError(f"Heure invalide: {heure_str}")
+
+    hour = int(match.group(1))
+    minute = int(match.group(2))
+
+    target_weekday = JOUR_TO_WEEKDAY[jour]
+
+    # nombre de jours jusqu'au prochain 'jour'
+    days_ahead = (target_weekday - now_utc.weekday()) % 7
+
+    candidate = now_utc.replace(
+        hour=hour,
+        minute=minute,
+        second=0,
+        microsecond=0,
+    )
+
+    # si c'est aujourd'hui mais heure déjà passée → semaine prochaine
+    if days_ahead == 0 and candidate <= now_utc:
+        days_ahead = 7
+
+    if days_ahead != 0:
+        candidate = candidate + timedelta(days=days_ahead)
+
+    return candidate  # datetime en UTC
+
+# 100 FIN
+
 
 # === Statistiques ===
 
@@ -959,6 +1059,101 @@ async def handle_admin_message(message: types.Message):
         f"reply_to={getattr(message.reply_to_message, 'message_id', None)}"
     )
 
+# 100       # 0) COMMANDE DE TEST DU SCHEDULER
+    if message.text == "/test_scheduler":
+        await message.reply("⏳ Test du scheduler en cours...")
+        try:
+            await process_due_programmations_once()
+            await message.reply("✅ Scheduler exécuté une fois. Vérifie Airtable et les logs.")
+        except Exception as e:
+            await message.reply(f"❌ Erreur dans le scheduler : {e}")
+            print(f"[SCHEDULE] Erreur via /test_scheduler : {e}")
+        return
+    
+            # 0) MODE SAISIE HEURE POUR PROGRAMMATION
+    if mode == "en_attente_heure_prog":
+        if not message.text:
+            await bot.send_message(
+                chat_id=admin_id,
+                text="❌ Please send only the time in 24-hour format, ex. 10:00."
+            )
+            return
+
+        heure_str = message.text.strip()
+
+        if not HEURE_REGEX.match(heure_str):
+            await bot.send_message(
+                chat_id=admin_id,
+                text="❌ Invalid format. Valid examples : 09:30, 14:05, 21:00."
+            )
+            return
+
+        prog_ctx = pending_programmation.get(admin_id)
+        message_data = pending_mass_message.get(admin_id)
+
+        if not prog_ctx or not message_data:
+            # plus de contexte → on reset
+            admin_modes[admin_id] = None
+            pending_programmation.pop(admin_id, None)
+            await bot.send_message(
+                chat_id=admin_id,
+                text="❌ No more messages waiting to be scheduled."
+            )
+            return
+
+        jour = prog_ctx["jour"]
+
+        # 🕒 1) On calcule la prochaine date d'exécution en UTC
+        try:
+            run_at_utc = compute_next_run_utc(jour, heure_str)
+        except Exception as e:
+            await bot.send_message(
+                chat_id=admin_id,
+                text=f"❌ Error calculating the shipping date : {e}"
+            )
+            return
+
+        # 🗄️ 2) On ENREGISTRE maintenant dans Airtable
+        try:
+            record_id = create_programmation_vip_record(
+                jour=jour,
+                heure_locale=heure_str,
+                run_at_utc=run_at_utc,
+                message_data=message_data,
+                admin_id=admin_id,
+            )
+        except Exception as e:
+            print(f"[SCHEDULE] Erreur Airtable : {e}")
+            await bot.send_message(
+                chat_id=admin_id,
+                text=(
+                    "❌ Unable to save the schedule at this time.\n"
+                    "Please try again later or contact Nova Pulse."
+                )
+            )
+            return
+
+        # 3) Reset des états liés à la programmation
+        admin_modes[admin_id] = None
+        pending_programmation.pop(admin_id, None)
+        pending_mass_message.pop(admin_id, None)
+
+        run_at_utc_str = run_at_utc.strftime("%Y-%m-%d %H:%M UTC")
+
+        await bot.send_message(
+            chat_id=admin_id,
+            text=(
+                "📅 *Programming created successfully !*\n\n"
+                f"• Day : *{jour}*\n"
+                f"• Local time : *{heure_str}*\n"
+                f"• Scheduled execution (UTC) : *{run_at_utc_str}*\n\n"
+                "✅ It is now registered with the status *pending*.\n"
+            ),
+            parse_mode="Markdown"
+        )
+        return
+
+
     # 1) MENU ENVOI GROUPÉ
     if message.text == "✉️ Message to all VIPs":
         kb = InlineKeyboardMarkup()
@@ -1342,6 +1537,7 @@ async def traiter_message_groupé(message: types.Message, admin_id=None):
     kb = InlineKeyboardMarkup(row_width=2)
     kb.add(
         InlineKeyboardButton("✅ Confirm sending", callback_data="confirmer_envoi_groupé"),
+        InlineKeyboardButton("📅 Schedule sending", callback_data="programmer_envoi_groupé"),
         InlineKeyboardButton("❌ Cancel sending", callback_data="annuler_envoi_groupé")
     )
     await message.reply(f"Preview :\n\n{preview}", reply_markup=kb)
@@ -1349,6 +1545,285 @@ async def traiter_message_groupé(message: types.Message, admin_id=None):
 
 
 # ========== CALLBACKS ENVOI / ANNULATION GROUPÉ ==========
+
+# 100
+@dp.callback_query_handler(lambda call: call.data == "programmer_envoi_groupé")
+async def programmer_envoi_groupé(call: types.CallbackQuery):
+    await call.answer()
+    admin_id = call.from_user.id
+
+    message_data = pending_mass_message.get(admin_id)
+    if not message_data:
+        await bot.send_message(
+            chat_id=admin_id,
+            text="❌ No messages waiting to be scheduled."
+        )
+        return
+
+    # 1) On demande d'abord le jour
+    kb = InlineKeyboardMarkup(row_width=2)
+    for jour in ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]:
+        kb.insert(
+            InlineKeyboardButton(jour, callback_data=f"prog_jour_{jour.lower()}")
+        )
+
+    kb.add(InlineKeyboardButton("❌ Cancel", callback_data="annuler_envoi_groupé"))
+
+    await bot.send_message(
+        chat_id=admin_id,
+        text="🗓 Select the day to send this message :",
+        reply_markup=kb
+    )
+
+# 100
+# 100
+@dp.callback_query_handler(lambda call: call.data.startswith("prog_jour_"))
+async def choisir_jour_programmation(call: types.CallbackQuery):
+    await call.answer()
+    admin_id = call.from_user.id
+
+    jour_code = call.data.replace("prog_jour_", "")  # 'lundi'
+    jour_label = jour_code.capitalize()              # 'Lundi'
+
+    if jour_label not in JOUR_TO_WEEKDAY:
+        await bot.send_message(
+            chat_id=admin_id,
+            text="❌ Invalid day, try again."
+        )
+        return
+
+    # On mémorise le jour choisi pour cet admin
+    pending_programmation[admin_id] = {"jour": jour_label}
+
+    # On passe en mode "en_attente_heure_prog"
+    admin_modes[admin_id] = "en_attente_heure_prog"
+
+    await bot.send_message(
+        chat_id=admin_id,
+        text=(
+            f"⏰ What time do you want to send this message on {jour_label} ?\n\n"
+            "UTC Format and 24h Format, for ex : `10:00` or `21:30`."
+        ),
+        parse_mode="Markdown"
+    )
+
+# 100
+
+def get_due_programmations():
+    """
+    Récupère les programmations avec Status='pending'
+    et dont RunAtUTC est passée (<= maintenant UTC).
+    Retourne une liste de records Airtable complets.
+    """
+    if AIRTABLE_API_KEY is None or BASE_ID is None:
+        raise RuntimeError("AIRTABLE_API_KEY ou BASE_ID non configuré")
+
+    url = f"https://api.airtable.com/v0/{BASE_ID}/{AIRTABLE_TABLE_PROGRAMMATIONS.replace(' ', '%20')}"
+    headers = {
+        "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+    }
+
+    # On filtre côté Airtable sur Status = 'pending'
+    params = {
+        "filterByFormula": "{Status}='pending'",
+        "pageSize": 100,  # on limite à 100 par batch
+    }
+
+    resp = requests.get(url, headers=headers, params=params)
+    data = resp.json()
+
+    if resp.status_code >= 300:
+        raise RuntimeError(f"Airtable error {resp.status_code}: {data}")
+
+    now_utc = datetime.now(timezone.utc)
+    due_records = []
+
+    for record in data.get("records", []):
+        fields = record.get("fields", {})
+        run_at_str = fields.get("RunAtUTC")
+
+        if not run_at_str:
+            continue
+
+        # Support des deux formats : ...Z ou avec offset
+        try:
+            if run_at_str.endswith("Z"):
+                run_at_dt = datetime.fromisoformat(run_at_str.replace("Z", "+00:00"))
+            else:
+                run_at_dt = datetime.fromisoformat(run_at_str)
+        except Exception as e:
+            print(f"[SCHEDULE] RunAtUTC invalide pour record {record.get('id')}: {e}")
+            continue
+
+        # Si la date/heure est passée → on ajoute
+        if run_at_dt <= now_utc:
+            due_records.append(record)
+
+    return due_records
+#101
+#101
+def mark_programmation_as_sent(record_id):
+    """
+    Met à jour Status='sent' et SentAt=now UTC pour une programmation.
+    """
+    if AIRTABLE_API_KEY is None or BASE_ID is None:
+        raise RuntimeError("AIRTABLE_API_KEY ou BASE_ID non configuré")
+
+    url = f"https://api.airtable.com/v0/{BASE_ID}/{AIRTABLE_TABLE_PROGRAMMATIONS.replace(' ', '%20')}/{record_id}"
+
+    now_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    fields = {
+        "Status": "sent",
+        "SentAt": now_utc,
+    }
+
+    headers = {
+        "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    resp = requests.patch(url, headers=headers, json={"fields": fields})
+    data = resp.json()
+
+    if resp.status_code >= 300:
+        raise RuntimeError(f"Airtable error {resp.status_code}: {data}")
+
+    return data
+
+#101
+#101
+async def process_due_programmations_once():
+    """
+    1. Récupère les programmations dues (pending + RunAtUTC <= now)
+    2. Pour chacune, envoie le message à tous les VIPs
+    3. Marque la programmation comme sent
+    """
+    try:
+        due_records = get_due_programmations()
+    except Exception as e:
+        print(f"[SCHEDULE] Erreur en récupérant les programmations dues : {e}")
+        return
+
+    if not due_records:
+        return  # rien à faire
+
+    # On récupère les VIPs de CE bot (on réutilise ta logique)
+    try:
+        # Ici on part du principe que ce bot a un seul "admin vendeur"
+        # et que SELLER_EMAIL correspond à la table VIP de ce bot.
+        vip_ids = list(get_vip_ids_for_admin_email(SELLER_EMAIL))
+    except Exception as e:
+        print(f"[SCHEDULE] Erreur en récupérant les VIPs pour {SELLER_EMAIL} : {e}")
+        return
+
+    if not vip_ids:
+        print("[SCHEDULE] Aucun VIP trouvé, envoi annulé.")
+        return
+
+    for record in due_records:
+        record_id = record.get("id")
+        fields = record.get("fields", {})
+
+        msg_type = fields.get("Type")
+        content = fields.get("Content")
+        caption = fields.get("Caption", "")
+
+        if not msg_type or not content:
+            print(f"[SCHEDULE] Record {record_id} incomplet, skip.")
+            continue
+
+        envoyes = 0
+        erreurs = 0
+
+        for vip in vip_ids:
+            try:
+                vip_int = int(vip)
+
+                if msg_type == "text":
+                    await bot.send_message(chat_id=vip_int, text=content)
+
+                elif msg_type == "photo":
+                    await bot.send_photo(chat_id=vip_int, photo=content, caption=caption)
+
+                elif msg_type == "video":
+                    await bot.send_video(chat_id=vip_int, video=content, caption=caption)
+
+                elif msg_type == "audio":
+                    await bot.send_audio(chat_id=vip_int, audio=content, caption=caption)
+
+                elif msg_type == "voice":
+                    await bot.send_voice(chat_id=vip_int, voice=content)
+
+                elif msg_type == "document":
+                    await bot.send_document(chat_id=vip_int, document=content, caption=caption)
+
+                else:
+                    print(f"[SCHEDULE] Type inconnu '{msg_type}' pour record {record_id}")
+                    erreurs += 1
+                    continue
+
+                envoyes += 1
+
+            except Exception as e:
+                print(f"[SCHEDULE] Erreur envoi VIP {vip}: {e}")
+                erreurs += 1
+
+        print(f"[SCHEDULE] Programmation {record_id} envoyée à {envoyes} VIP(s), erreurs={erreurs}")
+
+        try:
+            mark_programmation_as_sent(record_id)
+        except Exception as e:
+            print(f"[SCHEDULE] Erreur mise à jour Status pour {record_id}: {e}")
+        
+        # 🔔 Notification au Directeur
+        try:
+            jour = fields.get("Jour", "—")
+            heure_locale = fields.get("Heure locale", "—")
+
+            notif_text = (
+                "📤 *Programming sent*\n\n"
+                f"• ID : `{record_id}`\n"
+                f"• Day : *{jour}*\n"
+                f"• local time : *{heure_locale}*\n"
+                f"• Type : *{msg_type}*\n"
+                f"• VIPs touched : *{envoyes}*\n"
+                f"• Error : *{erreurs}*\n\n"
+                "Status : *sent* dans Airtable ✅"
+            )
+
+            await bot.send_message(
+                chat_id=DIRECTEUR_ID,
+                text=notif_text,
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            print(f"[SCHEDULE] Erreur envoi notification Directeur pour {record_id}: {e}")
+#101
+
+import asyncio
+from datetime import datetime, timezone
+# ... (le reste de tes imports)
+
+async def scheduler_loop():
+    """
+    Boucle qui tourne en tâche de fond.
+    Toutes les 60s, elle tente d'envoyer les programmations dues.
+    """
+    print("[SCHEDULE] Scheduler démarré.")
+    while True:
+        try:
+            now_utc = datetime.now(timezone.utc).isoformat()
+            print(f"[SCHEDULE] Tick - vérification des programmations à {now_utc}")
+            await process_due_programmations_once()
+            print("[SCHEDULE] Tick terminé.")
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"[SCHEDULE] Erreur dans scheduler_loop : {e}")
+        await asyncio.sleep(60)
+
+
 
 @dp.callback_query_handler(lambda call: call.data == "confirmer_envoi_groupé")
 async def confirmer_envoi_groupé(call: types.CallbackQuery):
