@@ -12,6 +12,9 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from ban_storage import ban_list
 from middlewares.payment_filter import PaymentFilterMiddleware
 from vip_topics import is_vip, get_user_id_by_topic_id, get_panel_message_id_by_user, update_vip_info, _user_topics
+import re
+from urllib.parse import quote
+from datetime import datetime, timezone
 
 
 dp.middleware.setup(PaymentFilterMiddleware(authorized_users))
